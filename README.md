@@ -1,1 +1,1 @@
-# Python Template
+# Grayscale Image manipulation

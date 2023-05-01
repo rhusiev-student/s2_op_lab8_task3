@@ -14,3 +14,19 @@ class GrayscaleImage:
         self._nrows = nrows
         self._ncols = ncols
         self._pixels = [[0 for _ in range(ncols)] for _ in range(nrows)]
+
+    def width(self) -> int:
+        """Return image width.
+
+        Returns:
+            int: image width
+        """
+        return self._ncols
+
+    def height(self) -> int:
+        """Return image height.
+
+        Returns:
+            int: image height
+        """
+        return self._nrows

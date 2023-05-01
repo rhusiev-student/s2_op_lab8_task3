@@ -1,5 +1,7 @@
 """Grayscale image manipulator."""
 from __future__ import annotations
+from typing import Iterable
+import struct
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -99,3 +101,183 @@ class GrayscaleImage:
         """
         image = np.array(self._pixels, dtype=np.uint8)
         Image.fromarray(image).save(path)
+
+    def lzw_compression(self, path: str) -> None:
+        """Compress image using LZW algorithm.
+
+        Args:
+            path (str): path to compressed image file
+
+        Raises:
+            ValueError: LZW compression failed
+        """
+        lzw = LZW(self._pixels, None)
+        lzw.compress()
+        if lzw.compressed_data is None:
+            raise ValueError("LZW compression failed.")
+        with open(path, "wb") as file:
+            file.write(lzw.compressed_data)
+
+    @staticmethod
+    def lzw_decompression(path: str) -> GrayscaleImage:
+        """Decompress image using LZW algorithm.
+
+        Args:
+            path (str): path to compressed image file
+
+        Returns:
+            GrayscaleImage: decompressed image
+
+        Raises:
+            ValueError: LZW decompression failed
+        """
+        with open(path, "rb") as file:
+            compressed_data = file.read()
+        lzw = LZW(None, compressed_data)
+        lzw.decompress()
+        if lzw.raw_data is None:
+            raise ValueError("LZW decompression failed.")
+        return GrayscaleImage.from_matrix(lzw.to_matrix())
+
+    @staticmethod
+    def from_matrix(matrix: list[list[int]]) -> GrayscaleImage:
+        """Create image from matrix.
+
+        Args:
+            matrix (list[list[int]]): matrix
+
+        Returns:
+            GrayscaleImage: grayscale image
+        """
+        nrows = len(matrix)
+        ncols = len(matrix[0])
+        image = GrayscaleImage(nrows, ncols)
+        for row in range(nrows):
+            for col in range(ncols):
+                image[row, col] = matrix[row][col]
+        return image
+
+
+class LZW:
+    """LZW algorithm implementation."""
+
+    def __init__(
+        self,
+        raw_data: list[list[int]] | None = None,
+        compressed_data: bytes | None = None,
+    ) -> None:
+        """Initialize LZW algorithm.
+
+        Args:
+            raw_data (list[list[int]] | list[int] | None): raw data
+            compressed_data (bytes | None): compressed data
+        """
+        if raw_data is not None:
+            self.height = len(raw_data)
+            self.width = len(raw_data[0])
+            self.raw_data = [pixel for row in raw_data for pixel in row]
+        self.compressed_data = compressed_data
+
+    def compress(self) -> None:
+        """Compress data using LZW algorithm.
+
+        Raises:
+            ValueError: raw data is not set
+        """
+        if self.raw_data is None:
+            raise ValueError("Raw data is not set.")
+        compressed = []
+        start_dictionary: list[int] = list(set(self.raw_data))
+        dictionary = [[pixel] for pixel in start_dictionary]
+        i = 0
+        while i < len(self.raw_data):
+            prefix_id = self._find_longest_prefix(
+                dictionary, (self.raw_data[j] for j in range(i, len(self.raw_data)))
+            )
+            if prefix_id == -1:
+                break
+            prefix = dictionary[prefix_id]
+            compressed.append(prefix_id)
+            i += len(prefix)
+            if i < len(self.raw_data):
+                dictionary.append(prefix + [self.raw_data[i]])
+
+        start_dict_bytes = bytes(start_dictionary)
+        compressed_bytes = b""
+        for i in compressed:
+            compressed_bytes += struct.pack(">I", i)
+        shape_header = struct.pack(">II", self.height, self.width)
+        start_dict_header = struct.pack(">I", len(start_dict_bytes))
+        compressed_header = struct.pack(">I", len(compressed_bytes))
+        self.compressed_data = (
+            shape_header
+            + start_dict_header
+            + start_dict_bytes
+            + compressed_header
+            + compressed_bytes
+        )
+
+    def _find_longest_prefix(
+        self, dictionary: list[list[int]], sequence: Iterable[int]
+    ) -> int:
+        """Find longest prefix in dictionary.
+
+        Args:
+            dictionary (list[list[int]]): dictionary
+            sequence (Iterable[int]): sequence
+
+        Returns:
+            int: index of longest prefix in dictionary
+        """
+        prefix = []
+        for char in sequence:
+            prefix.append(char)
+            if prefix in dictionary:
+                continue
+            return dictionary.index(prefix[:-1])
+        return dictionary.index(prefix)
+
+    def decompress(self) -> None:
+        """Decompress data using LZW algorithm.
+
+        Raises:
+            ValueError: compressed data is not set
+        """
+        if self.compressed_data is None:
+            raise ValueError("Compressed data is not set.")
+        height = struct.unpack(">I", self.compressed_data[:4])[0]
+        width = struct.unpack(">I", self.compressed_data[4:8])[0]
+        start_dict_size = struct.unpack(">I", self.compressed_data[8:12])[0]
+        start_dict = self.compressed_data[12 : 12 + start_dict_size]
+        compressed_size = struct.unpack(
+            ">I", self.compressed_data[12 + start_dict_size : 16 + start_dict_size]
+        )[0]
+        compressed = []
+        for i in range(16 + start_dict_size, 16 + start_dict_size + compressed_size, 4):
+            compressed.append(struct.unpack(">I", self.compressed_data[i : i + 4])[0])
+        dictionary = [[pixel] for pixel in start_dict]
+        decompressed = []
+        prev_i = compressed[0]
+        decompressed += dictionary[prev_i]
+        for i in compressed[1:]:
+            if i < len(dictionary):
+                dictionary.append(dictionary[prev_i] + [dictionary[i][0]])
+                decompressed += dictionary[i]
+            else:
+                dictionary.append(dictionary[prev_i] + [dictionary[prev_i][0]])
+                decompressed += dictionary[-1]
+            prev_i = i
+        self.height = height
+        self.width = width
+        self.raw_data = decompressed
+
+    def to_matrix(self) -> list[list[int]]:
+        """Convert decompressed data to matrix.
+
+        Returns:
+            list[list[int]]: matrix
+        """
+        return [
+            self.raw_data[i : i + self.width]
+            for i in range(0, len(self.raw_data), self.width)
+        ]

@@ -177,6 +177,7 @@ class LZW:
             self.width = len(raw_data[0])
             self.raw_data = [pixel for row in raw_data for pixel in row]
         self.compressed_data = compressed_data
+        self.max_dictionary_size = 2 ** 16
 
     def compress(self) -> None:
         """Compress data using LZW algorithm.
@@ -189,6 +190,7 @@ class LZW:
         compressed = []
         start_dictionary: list[int] = list(set(self.raw_data))
         dictionary = [[pixel] for pixel in start_dictionary]
+        dict_size = len(dictionary)
         i = 0
         while i < len(self.raw_data):
             prefix_id = self._find_longest_prefix(
@@ -199,15 +201,16 @@ class LZW:
             prefix = dictionary[prefix_id]
             compressed.append(prefix_id)
             i += len(prefix)
-            if i < len(self.raw_data):
+            if i < len(self.raw_data) and dict_size < self.max_dictionary_size:
                 dictionary.append(prefix + [self.raw_data[i]])
+                dict_size += 1
 
         start_dict_bytes = bytes(start_dictionary)
         compressed_bytes = b""
         for i in compressed:
-            compressed_bytes += struct.pack(">I", i)
-        shape_header = struct.pack(">II", self.height, self.width)
-        start_dict_header = struct.pack(">I", len(start_dict_bytes))
+            compressed_bytes += struct.pack(">H", i)
+        shape_header = struct.pack(">HH", self.height, self.width)
+        start_dict_header = struct.pack(">H", len(start_dict_bytes))
         compressed_header = struct.pack(">I", len(compressed_bytes))
         self.compressed_data = (
             shape_header
@@ -245,27 +248,30 @@ class LZW:
         """
         if self.compressed_data is None:
             raise ValueError("Compressed data is not set.")
-        height = struct.unpack(">I", self.compressed_data[:4])[0]
-        width = struct.unpack(">I", self.compressed_data[4:8])[0]
-        start_dict_size = struct.unpack(">I", self.compressed_data[8:12])[0]
-        start_dict = self.compressed_data[12 : 12 + start_dict_size]
+        height = struct.unpack(">H", self.compressed_data[:2])[0]
+        width = struct.unpack(">H", self.compressed_data[2:4])[0]
+        start_dict_size = struct.unpack(">H", self.compressed_data[4:6])[0]
+        start_dict = self.compressed_data[6 : 6 + start_dict_size]
         compressed_size = struct.unpack(
-            ">I", self.compressed_data[12 + start_dict_size : 16 + start_dict_size]
+            ">I", self.compressed_data[6 + start_dict_size : 10 + start_dict_size]
         )[0]
         compressed = []
-        for i in range(16 + start_dict_size, 16 + start_dict_size + compressed_size, 4):
-            compressed.append(struct.unpack(">I", self.compressed_data[i : i + 4])[0])
+        for i in range(10 + start_dict_size, 10 + start_dict_size + compressed_size, 2):
+            compressed.append(struct.unpack(">H", self.compressed_data[i : i + 2])[0])
         dictionary = [[pixel] for pixel in start_dict]
+        dict_size = len(dictionary)
         decompressed = []
         prev_i = compressed[0]
         decompressed += dictionary[prev_i]
         for i in compressed[1:]:
-            if i < len(dictionary):
-                dictionary.append(dictionary[prev_i] + [dictionary[i][0]])
-                decompressed += dictionary[i]
+            if i >= dict_size:
+                entry = dictionary[prev_i] + [dictionary[prev_i][0]]
             else:
-                dictionary.append(dictionary[prev_i] + [dictionary[prev_i][0]])
-                decompressed += dictionary[-1]
+                entry = dictionary[i]
+            decompressed += entry
+            if dict_size < self.max_dictionary_size:
+                dictionary.append(dictionary[prev_i] + [entry[0]])
+                dict_size += 1
             prev_i = i
         self.height = height
         self.width = width

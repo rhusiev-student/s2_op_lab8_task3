@@ -57,6 +57,7 @@ As we can see, the compression is working and does pretty well, compared to stor
 However, the existing jpg and png formats are still more effective
 
 Moreover, they take far less time, compared to lzw:
+
 | Time(s)       | Chess | Mountain |
 | Compression   | 39.5  | 937.1    |
 | Decompression | 0.1   | 0.7      |

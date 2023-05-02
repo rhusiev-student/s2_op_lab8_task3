@@ -9,7 +9,7 @@ def check_quality():
     chess_img = chess_img.lzw_decompression('chess_grayscale.png')
     chess_img.lzw.save_pickle('chess_raw.pickle')
 
-    mountain_img = GrayscaleImage.from_file('mountain.png')
+    mountain_img = GrayscaleImage.from_file('mountain.jpg')
     mountain_img.lzw_compression('mountain_compressed')
     mountain_img = mountain_img.lzw_decompression('mountain_grayscale.png')
     mountain_img.lzw.save_pickle('mountain_raw.pickle')

@@ -15,7 +15,7 @@ def check_quality():
     chess_img.lzw_compression("chess_compressed")
     stop = timeit.default_timer()
     print("    Compression time: ", stop - start)
-    compressed_size = os.path.getsize("chess_compressed.pickle") / 1024
+    compressed_size = os.path.getsize("chess_compressed") / 1024
     print(f"    Compressed size: {compressed_size} KiB")
 
     start = timeit.default_timer()
@@ -36,7 +36,7 @@ def check_quality():
     mountain_img.lzw_compression("mountain_compressed")
     stop = timeit.default_timer()
     print("    Compression time: ", stop - start)
-    compressed_size = os.path.getsize("mountain_compressed.pickle") / 1024
+    compressed_size = os.path.getsize("mountain_compressed") / 1024
     print(f"    Compressed size: {compressed_size} KiB")
 
     start = timeit.default_timer()

@@ -18,13 +18,13 @@ def check_quality():
     compressed_size = os.path.getsize("chess_compressed") / 1024
     print(f"    Compressed size: {compressed_size} KiB")
 
+    chess_img.lzw.save_pickle("chess_raw.pickle")
+    print("    Raw size: ", os.path.getsize("chess_raw.pickle") / 1024, "KiB")
+
     start = timeit.default_timer()
     chess_img = chess_img.lzw_decompression("chess_compressed")
     stop = timeit.default_timer()
     print("    Decompression time: ", stop - start)
-
-    chess_img.lzw.save_pickle("chess_raw.pickle")
-    print("    Raw size: ", os.path.getsize("chess_raw.pickle") / 1024, "KiB")
 
     print()
     print("Mountain image:")
@@ -39,13 +39,13 @@ def check_quality():
     compressed_size = os.path.getsize("mountain_compressed") / 1024
     print(f"    Compressed size: {compressed_size} KiB")
 
+    mountain_img.lzw.save_pickle("mountain_raw.pickle")
+    print("    Raw size: ", os.path.getsize("mountain_raw.pickle") / 1024, "KiB")
+
     start = timeit.default_timer()
     mountain_img = mountain_img.lzw_decompression("mountain_compressed")
     stop = timeit.default_timer()
     print("    Decompression time: ", stop - start)
-
-    mountain_img.lzw.save_pickle("mountain_raw.pickle")
-    print("    Raw size: ", os.path.getsize("mountain_raw.pickle") / 1024, "KiB")
 
 
 if __name__ == "__main__":

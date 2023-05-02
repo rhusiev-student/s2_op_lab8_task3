@@ -1,0 +1,13 @@
+Chess image:
+    Original size: 107.439453125 KiB
+    Compression time:  39.46951163400081
+    Compressed size: 76.2158203125 KiB
+    Raw size:  6606.087890625 KiB
+    Decompression time:  0.12640515599923674
+
+Mountain image:
+    Original size: 319.939453125 KiB
+    Compression time:  937.1321304839948
+    Compressed size: 1752.23828125 KiB
+    Raw size:  31115.1083984375 KiB
+    Decompression time:  0.6855138489991077

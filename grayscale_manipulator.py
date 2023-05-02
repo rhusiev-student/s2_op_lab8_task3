@@ -21,6 +21,7 @@ class GrayscaleImage:
         self._nrows = nrows
         self._ncols = ncols
         self._pixels = [[0 for _ in range(ncols)] for _ in range(nrows)]
+        self.lzw = LZW()
 
     def width(self) -> int:
         """Return image width.
@@ -112,12 +113,12 @@ class GrayscaleImage:
         Raises:
             ValueError: LZW compression failed
         """
-        lzw = LZW(self._pixels, None)
-        lzw.compress()
-        if lzw.compressed_data is None:
+        self.lzw.raw_data = [pixel for row in self._pixels for pixel in row]
+        self.lzw.compress()
+        if self.lzw.compressed_data is None:
             raise ValueError("LZW compression failed.")
         with open(path, "wb") as file:
-            file.write(lzw.compressed_data)
+            file.write(self.lzw.compressed_data)
 
     @staticmethod
     def lzw_decompression(path: str) -> GrayscaleImage:
@@ -178,7 +179,7 @@ class LZW:
             self.width = len(raw_data[0])
             self.raw_data = [pixel for row in raw_data for pixel in row]
         self.compressed_data = compressed_data
-        self.max_dictionary_size = 2 ** 16
+        self.max_dictionary_size = 2**16
 
     def compress(self) -> None:
         """Compress data using LZW algorithm.
@@ -289,7 +290,11 @@ class LZW:
             for i in range(0, len(self.raw_data), self.width)
         ]
 
-    def save_pickle(self) -> None:
-        """Save raw data to pickle file."""
-        with open("raw.pickle", "wb") as file:
+    def save_pickle(self, path: str = "raw.pickle") -> None:
+        """Save raw data to pickle file.
+
+        Args:
+            path (str, optional): path to file. Defaults to "raw.pickle".
+        """
+        with open(path, "wb") as file:
             pickle.dump(self.raw_data, file)

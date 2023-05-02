@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import Iterable
 import struct
+import pickle
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -287,3 +288,8 @@ class LZW:
             self.raw_data[i : i + self.width]
             for i in range(0, len(self.raw_data), self.width)
         ]
+
+    def save_pickle(self) -> None:
+        """Save raw data to pickle file."""
+        with open("raw.pickle", "wb") as file:
+            pickle.dump(self.raw_data, file)

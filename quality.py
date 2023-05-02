@@ -19,7 +19,7 @@ def check_quality():
     print(f"    Compressed size: {compressed_size} KiB")
 
     start = timeit.default_timer()
-    chess_img = chess_img.lzw_decompression("chess_grayscale.png")
+    chess_img = chess_img.lzw_decompression("chess_compressed")
     stop = timeit.default_timer()
     print("    Decompression time: ", stop - start)
 
@@ -40,7 +40,7 @@ def check_quality():
     print(f"    Compressed size: {compressed_size} KiB")
 
     start = timeit.default_timer()
-    mountain_img = mountain_img.lzw_decompression("mountain_grayscale.png")
+    mountain_img = mountain_img.lzw_decompression("mountain_compressed")
     stop = timeit.default_timer()
     print("    Decompression time: ", stop - start)
 

@@ -113,7 +113,7 @@ class GrayscaleImage:
         Raises:
             ValueError: LZW compression failed
         """
-        self.lzw.raw_data = [pixel for row in self._pixels for pixel in row]
+        self.lzw = LZW(self._pixels)
         self.lzw.compress()
         if self.lzw.compressed_data is None:
             raise ValueError("LZW compression failed.")

@@ -20,8 +20,8 @@ summary = "Typing stubs for Pillow"
 
 [metadata]
 lock_version = "4.2"
-groups = ["default"]
-content_hash = "sha256:a038934520be011352a37f0fb701c6eb04a867b74d321807307a2a5d25cb7828"
+groups = ["default", "dev"]
+content_hash = "sha256:7e34e31f05086c127488312ea4edcd0e3264f372d73d17c474ed193743a223e2"
 
 [metadata.files]
 "numpy 1.24.3" = [

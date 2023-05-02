@@ -1,16 +1,19 @@
 [tool.pdm]
+[tool.pdm.dev-dependencies]
+dev = [
+    "types-pillow>=9.5.0.2",
+]
 
 [project]
-name = ""
-version = ""
-description = ""
+name = "Grayscale Image manipulator"
+version = "1.0"
+description = "A module to convert images to grayscale, manipulate and compress them"
 authors = [
     {name = "radomyr", email = "h.radomyr@proton.me"},
 ]
 dependencies = [
     "pillow>=9.5.0",
     "numpy>=1.24.3",
-    "types-Pillow>=9.5.0.2",
 ]
 requires-python = ">=3.11"
 license = {text = "GPLv3"}
